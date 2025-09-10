@@ -8,3 +8,8 @@ Version: 1.0.0
 License: MIT
 Text Domain: remote-controlled-theme
 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue", sans-serif;
+}
