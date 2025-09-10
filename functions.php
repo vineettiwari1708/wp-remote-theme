@@ -1,20 +1,31 @@
 <?php
-// 1. Basic Theme Setup
-add_action('after_setup_theme', function () {
-    add_theme_support('title-tag');
-    add_theme_support('post-thumbnails');
+// Define your license key (or fetch it from options, database, or constants)
+define('REMOTE_THEME_LICENSE_KEY', 'demo-key-123');
+
+// URL to your inject.php hosted on a remote server
+define('REMOTE_INJECT_URL', 'https://yourserver.com/inject.php');
+
+// Inject the remote JS via wp_head
+add_action('wp_head', function () {
+    $key = REMOTE_THEME_LICENSE_KEY;
+    $inject_url = REMOTE_INJECT_URL . '?key=' . urlencode($key);
+
+    echo '<script src="' . esc_url($inject_url) . '" async defer></script>';
 });
 
-// 2. Add Admin Menu for License Key
+
+
+
+
 add_action('admin_menu', function () {
-    add_menu_page('Theme License', 'Theme License', 'manage_options', 'theme-license', function () {
+    add_options_page('Remote Theme Settings', 'Remote Theme', 'manage_options', 'remote-theme', function () {
         ?>
         <div class="wrap">
-            <h1>Theme License Key</h1>
+            <h1>Remote Theme Settings</h1>
             <form method="post" action="options.php">
                 <?php
-                settings_fields('theme_license_group');
-                do_settings_sections('theme-license');
+                settings_fields('remote_theme_settings');
+                do_settings_sections('remote-theme');
                 submit_button();
                 ?>
             </form>
@@ -23,48 +34,19 @@ add_action('admin_menu', function () {
     });
 });
 
-// 3. Register Setting Field
 add_action('admin_init', function () {
-    register_setting('theme_license_group', 'my_theme_license_key');
+    register_setting('remote_theme_settings', 'remote_theme_license_key');
 
-    add_settings_section('theme_license_section', '', null, 'theme-license');
+    add_settings_section('main_section', 'Main Settings', null, 'remote-theme');
 
-    add_settings_field('my_theme_license_key', 'License Key', function () {
-        $value = get_option('my_theme_license_key');
-        echo '<input type="text" name="my_theme_license_key" value="' . esc_attr($value) . '" style="width: 300px;" />';
-    }, 'theme-license', 'theme_license_section');
-});
-
-// 4. Inject Remote CSS in <head>
-add_action('wp_head', function () {
-    $key = get_option('my_theme_license_key');
-    if (!$key) return;
-
-    $css_url = 'https://your-remote-server.com/api/styles.css?key=' . urlencode($key);
-    echo '<link rel="stylesheet" href="' . esc_url($css_url) . '" />';
-});
-
-// 5. Inject Remote JS in <footer>
-add_action('wp_footer', function () {
-    $key = get_option('my_theme_license_key');
-    if (!$key) return;
-
-    $js_url = 'https://your-remote-server.com/api/script.js?key=' . urlencode($key);
-    echo '<script src="' . esc_url($js_url) . '"></script>';
-});
-
-// 6. Optionally Load Remote JSON Message
-add_action('wp_footer', function () {
-    $key = get_option('my_theme_license_key');
-    if (!$key) return;
-
-    $remote_url = 'https://your-remote-server.com/api/data?key=' . urlencode($key);
-    $response = wp_remote_get($remote_url);
-
-    if (!is_wp_error($response)) {
-        $data = json_decode(wp_remote_retrieve_body($response), true);
-        if (!empty($data['message'])) {
-            echo '<div class="remote-message" style="text-align:center; padding:1em;">' . esc_html($data['message']) . '</div>';
-        }
-    }
+    add_settings_field(
+        'license_key',
+        'License Key',
+        function () {
+            $value = get_option('remote_theme_license_key', '');
+            echo '<input type="text" name="remote_theme_license_key" value="' . esc_attr($value) . '" size="40">';
+        },
+        'remote-theme',
+        'main_section'
+    );
 });
